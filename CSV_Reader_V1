@@ -1,0 +1,213 @@
+import csv
+import statistics
+
+def normal_input(stock):
+    close_prices = []
+    high_prices = []
+    low_prices = []
+    prev_prices = []
+    
+    with open(stock + '.csv') as csvfile:
+        readCSV = csv.reader(csvfile, delimiter = ',')
+        for row in readCSV:
+            close_prices.append(row[5])
+            high_prices.append(row[3])
+            low_prices.append(row[4])
+            prev_prices.append(row[2])
+        #print(close_prices)
+        #print(volume)
+
+    close_prices = close_prices[1:-1]
+    high_prices = high_prices[1:-1]
+    low_prices = low_prices[1:-1]
+    prev_prices = prev_prices[1:-1]
+
+    for m in range(len(close_prices)):
+        close_prices[m] = float(close_prices[m])
+    for n in range(len(high_prices)):
+        high_prices[n] = float(high_prices[n])
+    for o in range(len(low_prices)):
+        low_prices[o] = float(low_prices[o])
+    for pp in range(len(prev_prices)):
+        prev_prices[pp] = float(prev_prices[pp])
+    
+    #v’=(v-min)/(max-min)
+
+    min_close = 1000
+    max_close = 0
+
+    min_high = 1000
+    max_high = 0
+
+    min_low = 1000
+    max_low = 0
+    
+    min_prev = 1000
+    max_prev = 0
+
+
+
+    for p in range(len(close_prices)):
+        if (close_prices[p] > max_close):
+            max_close = close_prices[p]
+        if (close_prices[p] < min_close):
+            min_close = close_prices[p]
+        
+    for q in range(len(high_prices)):
+        if (high_prices[q] > max_high):
+            max_high = high_prices[q]
+        if (high_prices[q] < min_high):
+            min_high = high_prices[q]
+            
+    for r in range(len(low_prices)):
+        if (low_prices[r] > max_low):
+            max_low = low_prices[r]
+        if (low_prices[r] < min_low):
+            min_low = low_prices[r]
+      
+    for s in range(len(prev_prices)):
+        if (prev_prices[s] > max_prev):
+            max_prev = prev_prices[s]
+        if (prev_prices[s] < min_prev):
+            min_prev = prev_prices[r]
+
+
+    #(Close(t)-Mean)/(StdDev)
+
+    normalized_close = []
+    normalized_high = []
+    normalized_low = []
+    normalized_prev = []
+
+
+    for i1 in range(len(close_prices)):
+        normalized_close.append((close_prices[i1] - min_close)/(max_close - min_close))
+    
+    for i2 in range(len(high_prices)):
+        normalized_high.append((high_prices[i2] - min_high)/(max_high - min_high))
+        
+    for i3 in range(len(low_prices)):
+        normalized_low.append((low_prices[i3] - min_low)/(max_low - min_low))
+
+    for i4 in range(len(prev_prices)):
+        normalized_prev.append((prev_prices[i4] - min_prev)/(max_prev - min_prev))
+
+    zip_data = []
+    amount = []
+
+    for i in range(len(normalized_close)):
+        amount.append(i)
+    
+    zip_data = list(zip(normalized_close,normalized_high,normalized_low,normalized_prev))
+    
+    #print(zip_data)
+    return (zip_data)
+
+def normal_output(stock):
+    open_prices = []
+
+    with open(stock + '.csv') as csvfile:
+        readCSV = csv.reader(csvfile, delimiter = ',')
+        for row in readCSV:
+            open_prices.append(row[2])
+    
+
+    open_prices = open_prices[2:]
+
+    for m in range(len(open_prices)):
+        open_prices[m] = float(open_prices[m])
+
+
+    min_open= 1000
+    max_open = 0
+
+    
+
+    for i in range(len(open_prices)):
+        if (open_prices[i] > max_open):
+            max_open = open_prices[i]
+        if (open_prices[i] < min_open):
+            min_open = open_prices[i]
+
+
+
+
+    #(Close(t)-Mean)/(StdDev)
+
+    normalized_open = []
+
+    for i1 in range(len(open_prices)):
+        normalized_open.append((open_prices[i1] - min_open)/(max_open - min_open))
+    #print(normalized_open)
+
+    
+    return (normalized_open)
+
+def input_data(stock):
+    close_prices = []
+    volume = []
+
+    with open(stock + '.csv') as csvfile:
+        readCSV = csv.reader(csvfile, delimiter = ',')
+        for row in readCSV:
+            close_prices.append(row[5])
+            volume.append(row[7])
+        
+        #print(close_prices)
+        #print(volume)
+
+    close_prices = close_prices[1:-1]
+    volume = volume[1:-1]
+
+    for m in range(len(close_prices)):
+        close_prices[m] = float(close_prices[m])
+    for o in range(len(volume)):
+        volume[o] = float(volume[o])
+    
+    zip_data = list(zip(close_prices,volume))
+    #print(zip_data)
+    return (zip_data)
+def output_data(stock):
+    open_prices = []
+
+    with open(stock + '.csv') as csvfile:
+        readCSV = csv.reader(csvfile, delimiter = ',')
+        for row in readCSV:
+            open_prices.append(row[2])
+    
+
+    open_prices = open_prices[2:]
+
+    for m in range(len(open_prices)):
+        open_prices[m] = float(open_prices[m])
+        
+    return (open_prices)
+
+def reverse_output(stock, normalized):
+    
+    open_prices = []
+
+    with open(stock + '.csv') as csvfile:
+        readCSV = csv.reader(csvfile, delimiter = ',')
+        for row in readCSV:
+            open_prices.append(row[2])
+    
+
+    open_prices = open_prices[2:]
+
+    for m in range(len(open_prices)):
+        open_prices[m] = float(open_prices[m])
+
+
+    min_open= 1000
+    max_open = 0
+
+    
+
+    for i in range(len(open_prices)):
+        if (open_prices[i] > max_open):
+            max_open = open_prices[i]
+        if (open_prices[i] < min_open):
+            min_open = open_prices[i]
+
+    return ((normalized * (max_open - min_open)) + min_open)
