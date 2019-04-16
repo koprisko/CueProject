@@ -672,14 +672,9 @@ class csv_creator:
                
             
 def main():
-        tickerSymbols = open("somestocks.txt", "r")      #used to test 5 stocks
-        for tick in tickerSymbols:
-            stock_info = stockNames(tick)
-            #print (stock_info[1])
-            #print(stock_info[0])
             
-            stock = stock_info[1]
-            ticker = stock_info[0]
+            stock = "Apple"
+            ticker= "AAPL"
             #data = Fetcher(ticker, [2016,1,1], [2016,4,8],'1d').getHistorical()
             #data.to_csv(ticker + '.csv')
             
