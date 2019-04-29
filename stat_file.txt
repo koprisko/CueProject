@@ -1,0 +1,6 @@
+MMM 190.52999999999997 Decrease 
+ABT 78.46 Increase 
+ABBV 79.67 Increase 
+ADBE 278.18 Decrease 
+AMD 27.66 Decrease 
+AAP 170.31 Decrease 
