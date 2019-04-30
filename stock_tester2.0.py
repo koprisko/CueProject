@@ -50,18 +50,20 @@ class NeuralNetwork():
     from numpy import exp, array, random, dot
     def __init__(self):
         # We model a single neuron, with 4 input connections and 1 output connection.
-        # We assign random weights to a 4 x 1 matrix, with values in the range -1 to 1
-        # and mean 0.
+        # We assign random weights to a 4 x 1 matrix, with values in the range 0 to 1
+        # These weights will be adjusted based on the error
         
         self.synaptic_weights = array([[.40], [.40], [.40], [.2]])
 
     # The Cost Function shows us how our model is performing. We chose MSE to show how far each point
     # deviates from the actual point. The goal is to minimize this number.
+    
     def cost_function(self, features, targets):
 
         #Find length of list
         N = len(targets)
 
+        #Get list of predictions of the output using synaptic weights
         predictions = dot(features, self.synaptic_weights)
     
         # Find square error for entire matrix
@@ -72,26 +74,22 @@ class NeuralNetwork():
 
     # The derivative of the MSE cost function.
     # This is the gradient of the MSE function that uses partial derivatives of each parameter.
-    # It indicates how confident we are about the existing weight.
+    # It indicates how confident we are about the existing weight, and how much we have to change each weight.
+    
     def update_weights(self,features, targets, lr):
 
         # Find predictions using w1x1 + w2x2 + w3x3...concept 
         predictions = dot(features, self.synaptic_weights)
 
-        #Extract our features
+        #Extract our features and put them into their own list
         x1 = features[:,0]
         x2 = features[:,1]
         x3 = features[:,2]
         x4 = features[:,3]
 
-        """ 
-        print (x1)
-        print (x2)
-        print (x3)
-        print (x4)
-        """
         # Use matrix cross product (*) to simultaneously
-        # calculate the derivative for each weight
+        # calculate the derivative for each weight (partial derivative)
+        
         d_w1 = -x1*(targets - predictions)
         d_w2 = -x2*(targets - predictions)
         d_w3 = -x3*(targets - predictions)
@@ -99,6 +97,7 @@ class NeuralNetwork():
 
         # Multiply the mean derivative by the learning rate
         # and subtract from our weights (remember gradient points in direction of steepest ASCENT)
+        
         self.synaptic_weights[0][0] -= (lr * np.mean(d_w1))
         self.synaptic_weights[1][0] -= (lr * np.mean(d_w2))
         self.synaptic_weights[2][0] -= (lr * np.mean(d_w3))
@@ -111,20 +110,23 @@ class NeuralNetwork():
 
     def train(self, training_set_inputs, training_set_outputs, number_of_training_iterations):
         for iteration in range(number_of_training_iterations):
+            
             # Pass the training set through our neural network (a single neuron).
+            # And ultimately return the MSE
+            
             output = self.think(training_set_inputs,training_set_outputs)
-            # Show the MSE of each iteration
-            #print ("MSE:")
-            #print (output)
-            # Update the weights by calling the function
+
+            # Update the weights by calling the function with a learning rate of .8.
+            
             self.update_weights(training_set_inputs,training_set_outputs,.8)
-            #Show new weights to see the change
-            #print ("New weights:")
-            #print (self.synaptic_weights)
+
 
     # The neural network thinks.
+    
     def think(self, inputs, outputs):
-        # Pass inputs through our neural network (our single neuron).
+        
+        # Pass inputs through our neural network (our single neuron). And return MSE
+        
         return self.cost_function(inputs,outputs)
     
 
@@ -400,51 +402,70 @@ class Sentiment:
         
                   
 class CSV_Normalize:
-    import csv
+    
+     
+
     stock = ""
 
+    # Initialize the lists for the 4 parameters
+       
     close_prices = []
     high_prices = []
-
     prev_prices = []
     sentiments = []
     
+    # Initialize max and min values for normalization calc
+    
     max_sent = 0.0
     min_sent = 0.0
-
-    normalized_sent = []
-    
-
     min_close = 1000
     max_close = 0  
     min_high = 1000
     max_high = 0
-
     min_prev = 1000
     max_prev = 0
 
+    # Initialize lists for normalized values of parameters
+    
     normalized_close = []
     normalized_high = []
-
     normalized_prev = []
-
+    normalized_sent = []
+   
+    # Initialize output parameters
+    
     open_prices = []
 
+    # Initialize max and min for normalization calc
+    
     min_open= 1000
     max_open = 0
 
+    # Initialize the normalized output list
+    
     normalized_open = []
 
+    # Create arrays to separate into training and testing lists
+    
     inputs = []
     training_inputs = []
     testing_inputs = []
 
+  
     training_outputs = []
     testing_outputs = []
 
+    # Set name of stock
+    
     def set_stock(self,stock):
         self.stock = stock
+        
+    # Set input values
+    
     def set_input(self):
+        
+        # Open CSV and read each row and append to specific list
+        
         with open(self.stock + '.csv') as csvfile:
             readCSV = csv.reader(csvfile, delimiter = ',')
             for row in readCSV:
@@ -453,11 +474,15 @@ class CSV_Normalize:
                 self.prev_prices.append(row[2])
                 self.sentiments.append(row[7])
 
+        # Remove the headers and the last row because the data is trailing
+        
         self.close_prices = self.close_prices[1:-1]
         self.high_prices = self.high_prices[1:-1]
         self.prev_prices = self.prev_prices[1:-1]
         self.sentiments = self.sentiments[1:-1]
 
+        # Turn data values into floats
+        
         for m in range(len(self.close_prices)):
             if self.close_prices[m] != "Close":
                 self.close_prices[m] = float(self.close_prices[m])
@@ -496,8 +521,14 @@ class CSV_Normalize:
             if (self.sentiments[s] < self.min_sent):
                 self.min_sent = self.sentiments[s]
 
+    # Perform normalization calculation and set normalized inputs            
     def set_normalized_input(self):
-        self.set_input()
+        # Call set_input function in case it was not called already
+        if (self.max_prev == 0):
+            self.set_input()
+            
+        # Perform normalization calculation under the normalized_x = (x - min)/(max - min) model
+        
         for i1 in range(len(self.close_prices)):
             self.normalized_close.append((self.close_prices[i1] - self.min_close)/(self.max_close - self.min_close))
 
@@ -510,20 +541,28 @@ class CSV_Normalize:
             
         for i5 in range(len(self.sentiments)):
             self.normalized_sent.append((self.sentiments[i5] - self.min_sent)/(self.max_sent - self.min_sent))
-        
+     
+    # Organize the input into a zipped list
     def get_input(self):
         return (list(zip(self.close_prices,self.high_prices,self.prev_prices,self.sentiments)))
-
+    # Organize the normalized input into a zipped list
     def get_nomralized_input(self):
         return (list(zip(self.normalized_close,self.normalized_high,self.normalized_prev,self.sentiments)))
 
+    # Set the output data
     def set_output(self):
+        
+        # Open and read the output file and append the list
+       
         with open(self.stock + '.csv') as csvfile:
             readCSV = csv.reader(csvfile, delimiter = ',')
             for row in readCSV:
                 self.open_prices.append(row[2])
+                
+        # Remove the first two rows (header and first data point)
         self.open_prices = self.open_prices[2:]
 
+        # 
         for m in range(len(self.open_prices)):
             self.open_prices[m] = float(self.open_prices[m])
 
