@@ -5,11 +5,8 @@ Created on Tue Apr 23 20:53:39 2019
 @author: kyleo
 """
 
-#from tkinter import Tk, Label, Button, Entry, LEFT, RIGHT, BOTTOM, Frame, Checkbutton, Canvas, PhotoImage
-#from PIL import ImageTk
-
-from tkinter import *
-from tkinter.tix import *
+from tkinter import Tk, Label, Button, Entry, LEFT, RIGHT, BOTTOM, Frame, Checkbutton, Canvas, PhotoImage
+from PIL import ImageTk
 
 import matplotlib
 matplotlib.use("TkAgg")
@@ -43,7 +40,7 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
 import datetime
-import os
+
 
 nltk.download('stopwords')
 stop_words = set(stopwords.words("english"))
@@ -56,7 +53,7 @@ class NeuralNetwork():
         # We assign random weights to a 4 x 1 matrix, with values in the range -1 to 1
         # and mean 0.
         
-        self.synaptic_weights = array([[.40], [.40], [.40], [.25]])
+        self.synaptic_weights = array([[.40], [.40], [.40], [.2]])
 
     # The Cost Function shows us how our model is performing. We chose MSE to show how far each point
     # deviates from the actual point. The goal is to minimize this number.
@@ -504,12 +501,13 @@ class CSV_Normalize:
         for i2 in range(len(self.high_prices)):
             self.normalized_high.append((self.high_prices[i2] - self.min_high)/(self.max_high - self.min_high))
 
+
         for i4 in range(len(self.prev_prices)):
             self.normalized_prev.append((self.prev_prices[i4] - self.min_prev)/(self.max_prev - self.min_prev))
-
-        for i5 in range(len(self.sentiments)):
-            dif_sent = self.max_sent - self.min_sent
-            if dif_sent != 0:
+        
+        dif_sent = self.max_sent - self.min_sent
+        if dif_sent != 0:
+            for i5 in range(len(self.sentiments)):
                 self.normalized_sent.append((self.sentiments[i5] - self.min_sent)/(self.max_sent - self.min_sent))
         if dif_sent == 0: 
             self.normalized_sent.append(0)
@@ -555,16 +553,9 @@ class CSV_Normalize:
         return self.training_inputs
 
     def set_training_input(self):
-        """
-        print(len(self.normalized_close))
-        print(len(self.normalized_high))
-        print(len(self.normalized_prev))
-        print(len(self.normalized_sent))
-        """
-        for i in range(len(self.normalized_close)):   
-            if i < len(self.normalized_close) and i < len(self.normalized_high) and i < len(self.normalized_prev) and i < len(self.normalized_sent):
-                temp_list = [self.normalized_close[i],self.normalized_high[i],self.normalized_prev[i],self.normalized_sent[i]]
-                self.inputs.append(temp_list)
+        for i in range(len(self.normalized_close)):           
+            temp_list = [self.normalized_close[i],self.normalized_high[i],self.normalized_prev[i],self.normalized_sent[i]]
+            self.inputs.append(temp_list)
         train_end = int(.7*len(self.inputs))
         self.training_inputs = self.inputs[0:train_end]
 
@@ -624,12 +615,20 @@ class csv_creator:
         key=  "0F9TBPXWF5YV5392"
         key3 =   "S8SGZ63ZVTYFOKV0"
         
-        if self.getJson(ticker,key, sentiments,cutoff) == 'false' :
-            if self.getJson(ticker,key2, sentiments,cutoff) == 'false' :
-                if self.getJson(ticker,key3, sentiments,cutoff) == 'false' :
-                    print("no luck")
+        self.verify = False
+        if self.getJson(ticker,key, sentiments,cutoff) == True :
+            self.verify = True
+        else:
+            if self.getJson(ticker,key2, sentiments,cutoff) == True :
+                self.verify = True
+            else:
+                if self.getJson(ticker,key3, sentiments,cutoff) == False :
+                    self.verify = False
+                else:
+                    self.verify = True
         
     def createCSV(self, symb, TUPLES):
+        print(len(TUPLES))
         file = symb + ".csv"
         with open(file, 'w', newline='') as csvFile:
               writer = csv.writer(csvFile)
@@ -681,8 +680,7 @@ class csv_creator:
                         count = count + 1
                 tups.reverse()
                 self.createCSV(symbol, tups)
-                return True
-            
+                return True 
             else:
                print("error with ticker symbol " + symbol)
                return False
@@ -697,428 +695,120 @@ def correctness(predict, actual):
             correct = correct + 1
         i = i + 1
     return(correct / i)
-           
-            
-            
-
-class Engine:
-    def __init__(self, master):
-
-        self.master = master
-        self.master.title("Muhlenberg Stock Predictor")
-        
-        self.stock = "" #used to 
-        
-        self.canvas = Canvas(self.master, width=self.master.winfo_screenwidth(), height= self.master.winfo_screenheight()-20, border = 0)
-        self.canvas.pack()
-        
-        swin = ScrolledWindow(self.canvas, width=self.master.winfo_screenwidth(), height= self.master.winfo_screenheight()-20)
-        swin.pack()
-        self.win = swin.window
-        
-        self.master1 = Canvas(self.win, width=700, height=700, border = 0)
-        self.master1.pack()
-        
-        self.master2 = Canvas(self.win, width=700, height=700, border = 0)
-        self.master2.pack()
-        
-        self.master3 = Canvas(self.win, width=700, height=700, border = 0)
-        self.master3.pack()
-        
-        self.master4 = Canvas(self.win, width=700, height=700, border = 0)
-        self.master4.pack()
-        
-        self.label1 = Label(self.master1, text= " \n What stock do you want us to predict? \n " , font=("Times New Roman", 20))
-        self.label1.pack()
-        
-        self.textField = Entry(self.master1, width = 50, font = "Helvetica")
-        self.textField.pack()
-        
-        #self.b1 = Button(self.master, text="GO!!!", command=self.quarry, activebackground = "crimson")
-        self.b1 = Button(self.master1, text="GO!!!",command = self.stock_lookup, activebackground = "crimson")
-        self.b1.pack()
-        
-        self.label = Label(self.master2, text= "Top Results", height = 2)
-
-        self.Result1 = Button(self.master2, text= "", border = 0, command = self.callback1)
-        self.Result2 = Button(self.master2, text= "", border = 0, command = self.callback1)
-        self.Result3 = Button(self.master2, text= "", border = 0, command = self.callback1)
-        self.Result4 = Button(self.master2, text= "", border = 0, command = self.callback1)
-        self.Result5 = Button(self.master2, text= "", border = 0, command = self.callback1)
-        self.faile = Label(self.master2, text= "", border = 0)
-        
-        self.verification = Label(self.master3, text= "", border = 0)
-        self.prediction = Label(self.master3, text= "", border = 0)
-        self.findings = Label(self.master3, text= "", border = 0)
-
-        self.labelI = Label(self.master4, text="",   border = 0)
-        self.sentiment1 = Label(self.master4, text= "", border = 0)
-        self.sentiment2 = Label(self.master4, text= "", border = 0)
-        self.sentiment3 = Label(self.master4, text= "", border = 0)
-        self.sentiment4 = Label(self.master4, text= "", border = 0)
-        
-        
-        
-    def clearLabels(self):
-        # all of these statements check to see if the element was packed and if it was, the element gets destroyed to make room for the next results
-        
-         if self.label.winfo_exists():
-             self.label.destroy()
-         
-         if self.labelI.winfo_exists():
-             self.labelI.destroy()   
-            
-         if self.Result1.winfo_exists() :
-             self.Result1.destroy()
-             
-         if self.Result2.winfo_exists() :
-            self.Result2.destroy()
-            
-         if self.Result3.winfo_exists() :
-             self.Result3.destroy()
-             
-         if self.Result4.winfo_exists() :
-            self.Result4.destroy()
-            
-         if self.Result5.winfo_exists() :   
-            self.Result5.destroy()
-         
-         if self.faile.winfo_exists():
-             self.faile.destroy()
-             
-         if self.findings.winfo_exists():
-             self.findings.destroy()   
-                          
-         if self.verification.winfo_exists():
-             self.verification.destroy()
-        
-         if self.prediction.winfo_exists():
-             self.prediction.destroy()
-             
-         if self.sentiment1.winfo_exists():
-             self.sentiment1.destroy()
-             
-         if self.sentiment2.winfo_exists():
-             self.sentiment2.destroy()
-         
-         if self.sentiment3.winfo_exists():
-             self.sentiment3.destroy()
-             
-         if self.sentiment4.winfo_exists():
-             self.sentiment4.destroy()
-             
-    def callback1(self):
-        temp = self.Result1['text']
-        self.clearLabels()
-        self.run(temp)
-        
-        
-    def callback2(self):
-        temp = self.Result2['text']
-        self.clearLabels
-        self.run(temp)
-        
-    
-    def callback3(self):
-        temp = self.Result3['text']
-        self.clearLabels
-        self.run(temp)
-        
-    
-    def callback4(self):
-        temp = self.Result4['text']
-        self.clearLabels
-        self.run(temp)
-        
-    def callback5(self):
-        temp = self.Result5['text']
-        self.clearLabels
-        self.run(temp)
-        
-    def ticker_company(self, info):
-        stock = info.split("--")
-        name = stock[0][15:].strip()
-        ticker = stock[1][18:].strip()
-        ar = []
-        ar.append(name)
-        ar.append(ticker)
-        return (ar)
-    
-    def run_file(self, info):
-        f = open(info, "r")
-        stock = f.readline()
-        stock = stock[0:-2]
-        ticker = f.readline()
-        stud = f.read()
-        sentis = stud.split("---")
-        #current_val is my reused regular expression
-        
-        current_val = re.compile(r'Current Value: .* \n')
-        current_vals = current_val.findall(stud)
-        stud = re.sub(current_val, "", stud)
-        
-        value_of_stock = current_vals[0]
-        
-        current_val = re.compile(r'Prediction: .* \n')
-        current_vals = current_val.findall(stud)
-        stud = re.sub(current_val, "", stud)
-        prediction = current_vals[0]
-        
-        current_val = re.compile(r'Perecent_correct: .* \n')
-        current_vals = current_val.findall(stud)
-        stud = re.sub(current_val, "", stud)
-        percent_correct = current_vals[0]
-        
-        current_val = re.compile(r'sentiment: .* \n')
-        current_vals = current_val.findall(stud)
-        stud = re.sub(current_val, "", stud)
-        
-        
-        cleaned_predicted = []
-        cleaned_actual = []
-        amount = []
-        predicted_vals = []
-        
-        #print(stud)
-        """
-        #current_val = re.compile(r'Predicted Values: [\d.\d]* \n Actual Values: \n')
-        current_val = re.compile(r'Predicted Values: [\d.\d]* \n Actual Values: \n')
-        current_vals = current_val.findall(stud)
-        
-    
-        current_val = re.compile(r'Actual Values:[^"]* ---------')
-        current_vals = current_val.findall(stud)
-        #stud = re.sub(current_val, "", stud)
-        actual_vals = stud.split("]") 
-    
-        
-        
-        
-        #print(predicted_vals[0])
-        #print(predicted_vals[1])
-        #print(predicted_vals[2])
-        boo = True
-        
-        for r in range(len(predicted_vals)-3):
-            val = predicted_vals[r+2][2:]
-              
-            if predicted_vals[r].isfloat() and boo == False:
-                val = float(predicted_vals[r])
-            if "Actual Values" in val:
-                boo = False        
-            if predicted_vals[r].isfloat() and boo == True:
-                cleaned_actual.append(float(val))
-            #else:
-            #   print(val)
-               #cleaned_predicted.append(float(val))
-            
-         """  #val = float(val)
-            #val = float((predicted_vals[r].strip()[1:]))
-            
-            #amount.append(r)
-        #for r in range(len(predicted_vals)-1):
-        #    val = float(predicted_vals[r].strip()[1:])
-        #    cleaned_actual.append(val)
-           
-        #print(amount)
-        #print(cleaned_predicted)
-        
-        
-        string = "This is what we concluded about " + stock + "."
-        self.findings = Label(self.master3, text= string , border = 2, font=("Times New Roman", 14))
-        self.findings.pack()
-                    
-        self.verification = Label(self.master3, text= "", border = 0, font=("Times New Roman", 14))
-        self.verification.pack()
-        val = float(percent_correct[19:-2].strip()) * 100
-        val = float("{0:.2f}".format(val))
-        self.verification['text'] = "We have been predicting movements in this stock with a " + str(val) + "% correctness"
-                                  
-        self.prediction = Label(self.master3, text= "", border = 0, font=("Times New Roman", 14))
-        self.prediction.pack()
-                      
-        if "Increase" in prediction:
-            self.prediction['text'] = "The stock is predicted to go on an upward trend!! \n \n"
-        else:
-            self.prediction['text'] = "The stock is predicted to go on an downward trend \n \n"
-        
-        i = 0
-        for s in sentis:
-            if "sentiment" in s:
-                    if i == 0: 
-                        string = " \n Here are some articles about " + stock + " \n "
-                        self.labelI = Label(self.master4, text=string,   border = 0, font=("Times New Roman", 16))
-                        self.labelI.pack()
-                        
-                        self.sentiment1 = Label(self.master4, text= "", border = 1, font=("Times New Roman", 14))
-                        self.sentiment1.pack()
-                        self.sentiment1['text'] = sentis[i][12:-2] + "\n"
-                    if i == 1: 
-                        self.sentiment2 = Label(self.master4, text= "", border = 1, font=("Times New Roman", 14))
-                        self.sentiment2.pack()
-                        self.sentiment2['text'] = sentis[i][12:-2] + "\n"
-                    if i == 2: 
-                        self.sentiment3 = Label(self.master4, text= "", border = 1, font=("Times New Roman", 14))
-                        self.sentiment3.pack()
-                        self.sentiment3['text'] = sentis[i] [12:-2]  +"\n"
-                    if i == 3: 
-                        self.sentiment4 = Label(self.master4, text= "", border = 1, font=("Times New Roman", 14 ))
-                        self.sentiment4.pack()
-                        self.sentiment4['text'] = sentis[i][12:-2] + "\n"
-                    i = i + 1
-            else:
-                a = s.split(":")
-                boo = True
-                for val in range(len(a)):
-                    if "Actual Values" in a[val]:
-                        temp = a[val].replace("Actual Values", "")
-                        temp = temp.strip()
-                        actual_vals = temp.split("]") 
-                        for num in range(len(actual_vals)-2):
-                                amount.append(num)
-                                cleaned_predicted.append(float(actual_vals[num][1:]))
-                        temp2 = (a[val+1].strip())
-                        actual_vals = temp2.split("] ") 
-                        for num in range(len(actual_vals)-1):
-                                cleaned_actual.append(float(actual_vals[num][1:]))
-                    
-                    #if boo == False:
-                    #    predicted_vals.append(val)
-                    #if "Actual Values:  " in val:
-                     #   boo = False        
-                    #if predicted_vals[r].isfloat() and boo == True:
-                    #    cleaned_actual.append(float(val))
-            #else:
-            #   print(val)
-               #cleaned_predicted.append(float(val))
-        #print(predicted_vals)
-        plt.plot(amount, cleaned_predicted, label = "predicted")
-        plt.plot(amount, cleaned_actual, label = 'actual')
-        plt.legend()
-        plt.show()
+                                   
+def main(): 
+    tickerSymbols = open("sp500.txt", "r")    #used to get info from the list of stocks we compiled
+    stat_file = open("stat_file.txt", "a")
+    #tickerSymbols = open("somestocks.txt", "r")      #used to test 5 stocks
+    index = 0
+    for tick in tickerSymbols:
+        contents  = tick.split()
+        ticker = contents[0]
+        regex = "+" + ticker + "+"
+        if regex not in open("DataFound.txt", "r").read() and index < 5:
+                string = ""
+                index = index + 1
+                stock = ""
+                count = 0
+                while count < len(contents)-1:
+                    count = count + 1
+                    stock = stock + " " + contents[count]
+                    stock = stock.strip()
+                print("Company Name: " + stock)
+                print("Ticker Symbol: " + ticker)
  
-    def run(self, stock):
-            self.label.destroy()
-            info = self.ticker_company(stock)
-            stock = info[0]
-            ticker = info[1]
-            file = ticker.strip() + ".txt"
-            exists = os.path.isfile(file)
-            if exists:
-                print("file exists")
-                self.run_file(file)
-            else:
                 sent = Sentiment(stock,ticker)
                 sentiments = sent.cleaned_data
-                if csv_creator(ticker, sentiments, '12-10-2010'):
+                articles = sent.full_articles
+                i = 0
+                f1 = csv_creator(ticker, sentiments, '12-10-2010')
+                if f1.verify  == True:
+                    info_file = open(ticker + ".txt", "a")
+                    info_file.write("Company Name: " + stock + " \n")
+                    info_file.write("Ticker Symbol: " + ticker  + " \n")
                     
-                    sentis = sent.full_articles
-                    for i in range(len(sentis)):
-                        if i == 0: 
-                            string = " \n Here are some articles about " + stock + ". \n "
-                            self.labelI = Label(self.master4, text=string,   border = 0, font=("Times New Roman", 16))
-                            self.labelI.pack()
+                    while i < len(articles):
+                        if i < 5:
+                            print("sentiment" + str(i+1) + ": " + articles[i].strip() + " \n")
+                            print("---")
                             
-                            self.sentiment1 = Label(self.master4, text= "", border = 1, font=("Times New Roman", 14))
-                            self.sentiment1.pack()
-                            self.sentiment1['text'] = sentis[i]
-                        if i == 1: 
-                            self.sentiment2 = Label(self.master4, text= "", border = 1, font=("Times New Roman", 14))
-                            self.sentiment2.pack()
-                            self.sentiment2['text'] = sentis[i]
-                        if i == 2: 
-                            self.sentiment3 = Label(self.master4, text= "", border = 1, font=("Times New Roman", 14))
-                            self.sentiment3.pack()
-                            self.sentiment3['text'] = sentis[i]   
-                        if i == 3: 
-                            self.sentiment4 = Label(self.master4, text= "", border = 1, font=("Times New Roman", 14 ))
-                            self.sentiment4.pack()
-                            self.sentiment4['text'] = sentis[i]
+                            info_file.write("sentiment" + str(i+1) + ": " + articles[i].strip() + " \n")
+                            info_file.write("---")
+                            
+                        i = i + 1
                     
-
+                    
                     msft = CSV_Normalize()
                     msft.set_stock(ticker)
                     msft.set_normalized_input()
                     msft.set_normalized_output()
+                    
+    
                     training_input = msft.get_training_input()
                     test_input = msft.get_testing_input()
                     training_output = [msft.get_training_output()]
-                    test_output = msft.get_testing_output()
                     
+                    test_output = msft.get_testing_output()
+                            
                     neural_network = NeuralNetwork()
                     #print ("Random starting synaptic weights: ")
                     #print (neural_network.synaptic_weights)
-                
+                        
                     neural_network.train(array(training_input), array(training_output).T, 100)
                     #neural_network.think(array(test_input[len(test_input)]))
-                    
+                            
                     #print ("New synaptic weights after training: ")
                     #print (neural_network.synaptic_weights)
                     #print (guess)
                     #print (test_input[0])
                     #print (test_output[0])
-                    
+                            
                     results = []
                     amount = []
                     actual = []
-                
+                        
                     for n in range(len(test_output)):
                         results.append(neural_network.get_output(array(test_input[n])))
                         amount.append(n)
-                
+                        
                     results_regular = []
-                
+                        
                     for i in range(len(results)):
                         results_regular.append(msft.inverse(results[i]))
                     for o in range(len(test_output)):
                         actual.append(msft.inverse(test_output[o]))
                     
-                    '''
-                    fig = Figure(figsize=(3,6))
-                    a = fig.add_subplot(111)
-                    a.plot(amount, results_regular, color = "blue", label = "predicted")
-                    a.plot(amount, actual, color = "red", label = "actual")
-                    a.set_title("Forecasting Plot", fontsize = 10)
-                    canvas = FigureCanvasTkAgg(fig, master = self.master3)
-                    canvas.get_tk_widget().pack()
-                    
-                    
-                    self.fig = Figure(figsize=(6,3))
-                    a = self.fig.add_subplot(111)
-                    a.plot(amount,results_regular, color = "blue", label = "predicted")
-                    a.plot(amount, actual, color = "red", label = "actual")
-                    a.set_title("Forecasting Plot", fontsize = 10)
-                    self.canvas2 = Label(self.fig, master = self.master3)
-                    self.canvas2.get_tk_widget().pack()
-                    '''
-                    
-    
+                    """
+                    plt.plot(amount, results, label = "predicted")
                     plt.plot(amount, results_regular, label = 'predicted')
+                    plt.plot(amount, test_output, label = 'actual')
                     plt.plot(amount, actual, label = 'actual')
                     plt.legend()
                     plt.show()
-                    
+                    """
                     
                     count = 0
                     temp = 0.0
                     tester = []
                     checker = []
                     #print("---------predicted-----------")
-                    
+                            
+                            
                     for i in range(len(results_regular)):
                         #print (i[0])    
                         if count > len(results_regular)*.8:
                             #print("current = " + str(results_regular[i]) + "temp = " + str(temp))
                             temp = results_regular[i-1] 
                             if temp < results_regular[i]:
-                                tester.append("Increase")
+                                temp2 = "Increase"
+                                tester.append(temp2)
                             else:
-                                tester.append("Decrease")
-                          
-                        count = count + 1
-                        if count ==len(results_regular):
-                            last_value_predicted = results_regular[i]
-                            
+                                temp2 = "Decrease"
+                                tester.append(temp2)
+                        if count ==len(results_regular)-1:
+                            last_value_predicted = temp2
+                        count = count + 1            
+                                 
                     count = 0
                     #print(tester)
                     #print("---------actual--------------")
@@ -1130,105 +820,47 @@ class Engine:
                                 checker.append("Increase")
                             else:
                                 checker.append("Decrease")
-                       
-                        count = count + 1
-                        if count ==len(actual):
-                            last_value_actual = actual[i]
-                    #print(checker)
-                       
-                    val = correctness(tester, checker)
-                    
-                    string = "This is what we concluded about " + stock + "."
-                    self.findings = Label(self.master3, text= string , border = 2, font=("Times New Roman", 14))
-                    self.findings.pack()
-                    
-                    self.verification = Label(self.master3, text= "", border = 0, font=("Times New Roman", 14))
-                    self.verification.pack()
-                    val = val * 100
-                    val = float("{0:.2f}".format(val))
-                    self.verification['text'] = "We have been predicting movements in this stock with a " + str(val) + "% correctness"
-                    
-                    last_value_predicted = last_value_predicted[0]
-                    
-                    
-                    self.prediction = Label(self.master3, text= "", border = 0, font=("Times New Roman", 14))
-                    self.prediction.pack()
-                      
-                    if last_value_predicted > last_value_actual:
-                        self.prediction['text'] = "The stock is predicted to go on an upward trend! \n \n"
-                    elif last_value_predicted < last_value_actual:
-                        self.prediction['text'] = "The stock is predicted to go on an downward trend! \n \n"
-                    else:
-                        self.prediction['text'] = "We have no advice on the movement of this stock  \n \n "
+                        count = count + 1  
                         
+                    val = correctness(tester, checker)
+                    print("Current Value: " + str(actual[count-1]))
+                    print("Prediction: " + last_value_predicted)
+                    print("Perecent_correct: "+ str(val)) 
+                    print("Predicted Values: \n")
+                    
+                    info_file.write("\nCurrent Value: " + str(actual[count-1]) + " \n")
+                    info_file.write("Prediction: " + last_value_predicted + " \n")
+                    info_file.write("Perecent_correct: "+ str(val) + " \n") 
+                    info_file.write("Predicted Values: \n ")
+                    
+                    for i in results_regular:
+                        info_file.write(str(i))
+                        
+                    print("Actual Values: \n" )
+                    info_file.write("\n Actual Values: \n ")
+                    for i in actual:
+                        #print(i)
+                        info_file.write("[" + str(i) + "] " )
+                    
+                    info_file.write("\n ---------")
+                    info_file.close()
+                    msft.clear_lists()
+                    
+                    string = ticker + " " + str(actual[count-1]) + " " + last_value_predicted + " \n"
+                    stat_file.write(string)
+                    
+                    
                     del(msft)
                     del(neural_network)
-    def stock_lookup(self):
-        self.clearLabels()
-        name = self.textField.get()
-        self.label = Label(self.master, text= "Top Results \n ", height = 2)
-        self.label.pack()
-        #url = 'http://d.yimg.com/autoc.finance.yahoo.com/autoc?query=Apple&region=1&lang=en&callback=YAHOO.Finance.SymbolSuggest.ssCallback'
-        url = 'http://d.yimg.com/autoc.finance.yahoo.com/autoc?query='+ name + '&region=1&lang=en&callback=YAHOO.Finance.SymbolSuggest.ssCallback'
-        data = requests.get(url)
-        #data.encoding = 'utf-8'
-        data = data.text
-        
-        #data = data.replace("YAHOO.Finance.SymbolSuggest.ssCallback", "") #unnecessary syntax in return string
-        
-        company = re.compile(r'"name":"[^"]+"') # pattern to get name of company
-        companys = company.findall(data)        # finds all of the company's names
-        
-        ticker = re.compile(r'"symbol":"[^"]+"')
-        tickers = ticker.findall(data) 
-    
-    
-        company_info = []
-        company_info.append(tuple((0,0)))
-        
-        for i in range(len(companys)):      
-            company_info.append((tuple(((companys[i][8:-1]),tickers[i][10:-1]))))
-           
-        if len(company_info) > 1:
-            self.Result1 = Button(self.master2, text= "", border = 0, command = self.callback1)
-            self.Result1.pack()
-            self.Result1['text'] = "Company name = " + company_info[1][0] + " --  Ticker Symbol = " + company_info[1][1]
-            
-        if len(company_info) >= 2:
-            self.Result2 = Button(self.master2, text= "", border = 0, command = self.callback2)
-            self.Result2.pack()
-            self.Result2['text'] = "Company name = " + company_info[2][0] + " --  Ticker Symbol = " + company_info[2][1]
-            
-        if len(company_info) >= 3:
-            self.Result3 = Button(self.master2, text= "", border = 0, command = self.callback3)
-            self.Result3.pack()
-            self.Result3['text'] = "Company name = " + company_info[3][0] + " --  Ticker Symbol = " + company_info[3][1]
-            
-        if len(company_info) >= 4:
-            self.Result4 = Button(self.master2, text= "", border = 0, command = self.callback4)
-            self.Result4.pack()
-            self.Result4['text'] = "Company name = " + company_info[4][0] + " --  Ticker Symbol = " + company_info[4][1]
-            
-        if len(company_info) >= 5:
-            self.Result5 = Button(self.master2, text= "", border = 0, command = self.callback5)
-            self.Result5.pack()
-            self.Result5['text'] = "Company name = " + company_info[5][0] + " --  Ticker Symbol = " + company_info[5][1]
-        if len(company_info) == 1:
-            self.faile = Label(self.master2, text= "", border = 0)
-            self.faile.pack()
-            self.faile['text'] = "Sorry their were no results for that search."
+                    del(training_input)
+                    del(test_input)
+                    del(training_output)
+                    del(test_output)
+                    index = index + 1
+                else:
+                    print("There was a problem")
+    tickerSymbols.close()
+    stat_file.close()
 
-    #used to get the amount that was predicted correctly
-    def correctness(predict, actual):
-        correct = 0
-        for i in range(len(predict)):
-            if actual[i] == predict[i]:
-                correct = correct + 1
-        return(correct / len(predict))
-
-def main():   
-    root = Tk()
-    root.geometry("{0}x{1}+0+0".format(root.winfo_screenwidth(), root.winfo_screenheight()))
-    gui = Engine(root)
-    root.mainloop()
+    
 main()
