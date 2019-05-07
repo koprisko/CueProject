@@ -12,9 +12,7 @@ from tkinter import *
 from tkinter.tix import *
 
 import matplotlib
-matplotlib.use("TkAgg")
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
+
 
 
 import numpy as np
@@ -23,6 +21,7 @@ import calendar as cal
 import pandas as pd
 import datetime as dt
 import re
+
 import requests
 try:
     from io import StringIO
@@ -33,11 +32,9 @@ import csv
 import statistics
 
 from numpy import exp, array, random, dot
-#import LoadCSV_V2
 import matplotlib.pyplot as plt
 
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -157,8 +154,8 @@ class Sentiment:
         info2 = r.text
         data2 = self.yahooCollector(info2) 
         new_dates = self.fix_year2(data2) # dates get properly formatted
-        count = 0
         
+        count = 0
         for i in data2:
             self.cleaned_data.append(tuple((new_dates[count],i[1])))
             count = count + 1
@@ -168,7 +165,6 @@ class Sentiment:
         response.encoding = 'utf-8'
         response = response.json()
             
-        
         if 'data' in response:
             for r in response['data']:
                 article = r['title'] + " " + r['text']                
@@ -177,25 +173,6 @@ class Sentiment:
                 dt = datetime.datetime.strptime(date, "%d %b %Y")
                 date_string = str(dt.month) + "-" +  str(dt.day) + "-" +  str(dt.year)
                 self.cleaned_data.append(tuple((date_string, self.classifier(article))))
-        
-        self.total_percent = 0
-        
-        count = 0 
-        if data:
-            for d in data: 
-                #if d != 0:
-                count = count + 1
-                self.total_percent = self.total_percent + self.check_polar(d[1])
-            
-        if data2:
-            for d in data2: 
-                #if d != 0:
-                   count = count + 1
-                   self.total_percent = self.total_percent + self.check_polar(d[1])
-            
-        self.total_percent = self.total_percent / count
-        #print("total_positive_sentiment from " + str(count) + " articles = " + str(self.total_percent))
-        
         
     def fix_year(self, date):
         holder = []
@@ -299,17 +276,7 @@ class Sentiment:
             dates.append(i[12:])
         return dates
             
-    def check_polar(self, pols):
-        neg = -.25
-        pos = .5
-        if pols < pos and pols > neg:
-            return 0
-        if pols >= pos:
-            return 1
-        if pols <= neg:
-            return -1
-    
-            
+
     def collector(self, stud): # stud has all of the reponse text from the http call
                                               
         head_Line = re.compile(r'"print_headline":"[^"]+","') #creates the regex to find headlines
@@ -387,15 +354,13 @@ class Sentiment:
         return(filtered_sent)
             
     def sentiment_analyzer_scores(self, sentence):
-        analyser = SentimentIntensityAnalyzer()
-        score = analyser.polarity_scores(sentence)
-        return(score['compound'])
+        analyser = SentimentIntensityAnalyzer() #initiates the analyzer
+        score = analyser.polarity_scores(sentence) #sends the analyser the article
+        return(score['compound'])   #gets returned a list with key values and the score that has the overall score for the article is the 'compound'
+        
      
     def classifier(self, info):
-        #info = self.clean_up(info)
-        sentiment = self.sentiment_analyzer_scores(info)
-        #print(info + " " + str(sentiment))
-        #return(self.check_polar((sentiment)))
+        sentiment = self.sentiment_analyzer_scores(info) #calls the sentiment analyzer
         return(sentiment)
         
                   
@@ -734,6 +699,8 @@ class Engine:
         self.textField = Entry(self.master1, width = 50, font = "Helvetica")
         self.textField.pack()
         
+        self.index = 0 # used to make sure that it is the second stock looked at so that we can clear the python chart. This is used in run
+        
         #self.b1 = Button(self.master, text="GO!!!", command=self.quarry, activebackground = "crimson")
         self.b1 = Button(self.master1, text="GO!!!",command = self.stock_lookup, activebackground = "crimson")
         self.b1.pack()
@@ -878,52 +845,7 @@ class Engine:
         cleaned_actual = []
         amount = []
         predicted_vals = []
-        
-        #print(stud)
-        """
-        #current_val = re.compile(r'Predicted Values: [\d.\d]* \n Actual Values: \n')
-        current_val = re.compile(r'Predicted Values: [\d.\d]* \n Actual Values: \n')
-        current_vals = current_val.findall(stud)
-        
     
-        current_val = re.compile(r'Actual Values:[^"]* ---------')
-        current_vals = current_val.findall(stud)
-        #stud = re.sub(current_val, "", stud)
-        actual_vals = stud.split("]") 
-    
-        
-        
-        
-        #print(predicted_vals[0])
-        #print(predicted_vals[1])
-        #print(predicted_vals[2])
-        boo = True
-        
-        for r in range(len(predicted_vals)-3):
-            val = predicted_vals[r+2][2:]
-              
-            if predicted_vals[r].isfloat() and boo == False:
-                val = float(predicted_vals[r])
-            if "Actual Values" in val:
-                boo = False        
-            if predicted_vals[r].isfloat() and boo == True:
-                cleaned_actual.append(float(val))
-            #else:
-            #   print(val)
-               #cleaned_predicted.append(float(val))
-            
-         """  #val = float(val)
-            #val = float((predicted_vals[r].strip()[1:]))
-            
-            #amount.append(r)
-        #for r in range(len(predicted_vals)-1):
-        #    val = float(predicted_vals[r].strip()[1:])
-        #    cleaned_actual.append(val)
-           
-        #print(amount)
-        #print(cleaned_predicted)
-        
-        
         string = "This is what we concluded about " + stock + "."
         self.findings = Label(self.master3, text= string , border = 2, font=("Times New Roman", 14))
         self.findings.pack()
@@ -982,31 +904,29 @@ class Engine:
                         for num in range(len(actual_vals)-1):
                                 cleaned_actual.append(float(actual_vals[num][1:]))
                     
-                    #if boo == False:
-                    #    predicted_vals.append(val)
-                    #if "Actual Values:  " in val:
-                     #   boo = False        
-                    #if predicted_vals[r].isfloat() and boo == True:
-                    #    cleaned_actual.append(float(val))
-            #else:
-            #   print(val)
-               #cleaned_predicted.append(float(val))
-        #print(predicted_vals)
+                   
         plt.plot(amount, cleaned_predicted, label = "predicted")
         plt.plot(amount, cleaned_actual, label = 'actual')
         plt.legend()
         plt.show()
  
     def run(self, stock):
-            self.label.destroy()
-            info = self.ticker_company(stock)
-            stock = info[0]
-            ticker = info[1]
-            file = ticker.strip() + ".txt"
-            exists = os.path.isfile(file)
-            if exists:
-                print("file exists")
-                self.run_file(file)
+            self.index = self.index + 1 
+            if self.index > 1: #checks to make sure it is not the first stock being run
+                plt.clf()      #deltes the information from the last stock on the chart
+            
+            self.label.destroy()# destroys remaning labels from the last stock
+            
+            info = self.ticker_company(stock) # calls a function that gets the company name and ticker symbol as an array
+            stock = info[0]  #stores the company name
+            ticker = info[1]  #stores the company's ticker symbol
+            
+            #this block is used to see if the selected stock is in our library of preprocessed stocks
+            file = ticker.strip() + ".txt"   #makes sure the ticker does not have any white space and then makes a file name
+            exists = os.path.isfile(file)   #returns true if the file is in our system
+            if exists: #this is used to see if the stock is already in our system
+                self.run_file(file) #sends the preprocessed file to be read by a part of the gui
+                
             else:
                 sent = Sentiment(stock,ticker)
                 sentiments = sent.cleaned_data
@@ -1045,11 +965,13 @@ class Engine:
                     training_output = [msft.get_training_output()]
                     test_output = msft.get_testing_output()
                     
+                    
                     neural_network = NeuralNetwork()
                     #print ("Random starting synaptic weights: ")
                     #print (neural_network.synaptic_weights)
                 
                     neural_network.train(array(training_input), array(training_output).T, 100)
+                    
                     #neural_network.think(array(test_input[len(test_input)]))
                     
                     #print ("New synaptic weights after training: ")
@@ -1073,24 +995,8 @@ class Engine:
                     for o in range(len(test_output)):
                         actual.append(msft.inverse(test_output[o]))
                     
-                    '''
-                    fig = Figure(figsize=(3,6))
-                    a = fig.add_subplot(111)
-                    a.plot(amount, results_regular, color = "blue", label = "predicted")
-                    a.plot(amount, actual, color = "red", label = "actual")
-                    a.set_title("Forecasting Plot", fontsize = 10)
-                    canvas = FigureCanvasTkAgg(fig, master = self.master3)
-                    canvas.get_tk_widget().pack()
                     
-                    
-                    self.fig = Figure(figsize=(6,3))
-                    a = self.fig.add_subplot(111)
-                    a.plot(amount,results_regular, color = "blue", label = "predicted")
-                    a.plot(amount, actual, color = "red", label = "actual")
-                    a.set_title("Forecasting Plot", fontsize = 10)
-                    self.canvas2 = Label(self.fig, master = self.master3)
-                    self.canvas2.get_tk_widget().pack()
-                    '''
+                    msft.clear_lists()
                     
     
                     plt.plot(amount, results_regular, label = 'predicted')
@@ -1163,6 +1069,10 @@ class Engine:
                         
                     del(msft)
                     del(neural_network)
+                    del(training_input)
+                    del(test_input)
+                    del(training_output)
+                    del(test_output)
     def stock_lookup(self):
         self.clearLabels()
         name = self.textField.get()
@@ -1174,7 +1084,6 @@ class Engine:
         #data.encoding = 'utf-8'
         data = data.text
         
-        #data = data.replace("YAHOO.Finance.SymbolSuggest.ssCallback", "") #unnecessary syntax in return string
         
         company = re.compile(r'"name":"[^"]+"') # pattern to get name of company
         companys = company.findall(data)        # finds all of the company's names

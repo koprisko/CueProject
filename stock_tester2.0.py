@@ -699,7 +699,6 @@ def correctness(predict, actual):
 def main(): 
     tickerSymbols = open("sp500.txt", "r")    #used to get info from the list of stocks we compiled
     stat_file = open("stat_file.txt", "a")
-    #tickerSymbols = open("somestocks.txt", "r")      #used to test 5 stocks
     index = 0
     for tick in tickerSymbols:
         contents  = tick.split()
@@ -720,13 +719,13 @@ def main():
                 sent = Sentiment(stock,ticker)
                 sentiments = sent.cleaned_data
                 articles = sent.full_articles
-                i = 0
+                
                 f1 = csv_creator(ticker, sentiments, '12-10-2010')
                 if f1.verify  == True:
                     info_file = open(ticker + ".txt", "a")
                     info_file.write("Company Name: " + stock + " \n")
                     info_file.write("Ticker Symbol: " + ticker  + " \n")
-                    
+                    i = 0
                     while i < len(articles):
                         if i < 5:
                             print("sentiment" + str(i+1) + ": " + articles[i].strip() + " \n")
@@ -747,22 +746,11 @@ def main():
                     training_input = msft.get_training_input()
                     test_input = msft.get_testing_input()
                     training_output = [msft.get_training_output()]
-                    
                     test_output = msft.get_testing_output()
                             
                     neural_network = NeuralNetwork()
-                    #print ("Random starting synaptic weights: ")
-                    #print (neural_network.synaptic_weights)
-                        
                     neural_network.train(array(training_input), array(training_output).T, 100)
-                    #neural_network.think(array(test_input[len(test_input)]))
-                            
-                    #print ("New synaptic weights after training: ")
-                    #print (neural_network.synaptic_weights)
-                    #print (guess)
-                    #print (test_input[0])
-                    #print (test_output[0])
-                            
+               
                     results = []
                     amount = []
                     actual = []
@@ -778,14 +766,6 @@ def main():
                     for o in range(len(test_output)):
                         actual.append(msft.inverse(test_output[o]))
                     
-                    """
-                    plt.plot(amount, results, label = "predicted")
-                    plt.plot(amount, results_regular, label = 'predicted')
-                    plt.plot(amount, test_output, label = 'actual')
-                    plt.plot(amount, actual, label = 'actual')
-                    plt.legend()
-                    plt.show()
-                    """
                     
                     count = 0
                     temp = 0.0
@@ -795,9 +775,7 @@ def main():
                             
                             
                     for i in range(len(results_regular)):
-                        #print (i[0])    
                         if count > len(results_regular)*.8:
-                            #print("current = " + str(results_regular[i]) + "temp = " + str(temp))
                             temp = results_regular[i-1] 
                             if temp < results_regular[i]:
                                 temp2 = "Increase"
@@ -810,10 +788,8 @@ def main():
                         count = count + 1            
                                  
                     count = 0
-                    #print(tester)
-                    #print("---------actual--------------")
+    
                     for i in range(len(actual)):
-                        #print (actual[i])
                         if count > len(actual)*.8:
                             temp = actual[i-1]
                             if temp < actual[i]:
