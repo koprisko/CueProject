@@ -14,8 +14,13 @@ from CSV_normalize_class import CSV_Normalize
 from CSV_creator_class import csv_creator
 from numpy import exp, array, random, dot
 import requests
-import matplotlib
+
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('TkAgg')
+
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 
 
 """This is the class that is incharge of displaying the prediction along with article news and other metrics.
@@ -72,6 +77,9 @@ class Engine:
         self.master4 = Canvas(self.win, width=700, height=700, border = 0)
         self.master4.pack()
         
+        self.master5 = Frame(self.win, width=700, height=700, border = 0)
+        self.master5.pack()
+        
         #asks user to input a stock
         self.label1 = Label(self.master1, text= " \n What stock do you want us to predict? \n " , font=("Times New Roman", 20))
         self.label1.pack()
@@ -80,7 +88,6 @@ class Engine:
         self.textField = Entry(self.master1, width = 50, font = "Helvetica")
         self.textField.pack()
         
-        self.index = 0 # used to make sure that it is the second stock looked at so that we can clear the python chart. This is used in run
         
         #self.b1 = Button(self.master, text="GO!!!", command=self.quarry, activebackground = "crimson")
         self.b1 = Button(self.master1, text="GO!!!",command = self.stock_lookup, activebackground = "crimson")
@@ -161,6 +168,9 @@ class Engine:
              
          if self.sentiment4.winfo_exists():
              self.sentiment4.destroy()
+             
+         if self.master5.winfo_exists():
+             self.master5.destroy()
     
     """"callbacks allow for the gui to know which button was clicked
     we then take the text at the button and send it to the run methhod"""
@@ -295,16 +305,17 @@ class Engine:
                         actual_vals = temp2.split("] ") #seperates the numbers into an array
                         for num in range(len(actual_vals)-1):
                                 cleaned_actual.append(float(actual_vals[num][1:])) #puts all of the numbers as floats in the array
-                    
+                 
         #plots all of the points into a python chart
-        plt.plot(amount, cleaned_predicted, label = "predicted")
+        plt.clf() #clears the plot and makes the chart appear
+        plt.plot(amount, cleaned_predicted, label = "predicted") 
         plt.plot(amount, cleaned_actual, label = 'actual')
-        plt.legend()
+        plt.legend() #displays legend
+        plt.show() #shows graph
+        
  
     def run(self, stock):
-            self.index = self.index + 1 
-            if self.index > 1: #checks to make sure it is not the first stock being run
-                plt.clf()      #deltes the information from the last stock on the chart
+            
             
             self.label.destroy()# destroys remaning labels from the last stock
             
@@ -380,15 +391,15 @@ class Engine:
                     for o in range(len(test_output)):
                         actual.append(msft.inverse(test_output[o]))  #calls the math function to get the actual value of the stock
                     
-                    
-                    
                     msft.clear_lists() #arrays and min max values are put back to their initialized values for future iterations
                     
-    
+                    
+                    plt.clf() #makes the plot appear and deletes all current previous contents
+                    #the points are plotted
                     plt.plot(amount, results_regular, label = 'predicted')
                     plt.plot(amount, actual, label = 'actual')
-                    plt.legend()
-                    plt.show()
+                    plt.legend() #legend is included
+                    plt.show() #show the updates
                     
                     
                     count = 0
